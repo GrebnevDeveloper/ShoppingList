@@ -1,11 +1,11 @@
 package com.grebnev.shoppinglist.presentation
 
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.grebnev.shoppinglist.R
 
 class MainActivity : AppCompatActivity() {
@@ -21,6 +21,12 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.shopList.observe(this) {
             adapter.submitList(it)
+        }
+
+        val btnAddShopItem = findViewById<FloatingActionButton>(R.id.btn_add_shop_item)
+        btnAddShopItem.setOnClickListener {
+            val intent = ShopItemActivity.newIntentAddShopItem(this)
+            startActivity(intent)
         }
     }
 
@@ -68,7 +74,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupClickListener() {
         adapter.onShopItemClickListener = {
-            Log.d("OnShopIteshopList = itmClickListener", it.toString())
+            val intent = ShopItemActivity.newIntentEditShopItem(this, it.id)
+            startActivity(intent)
         }
     }
 
