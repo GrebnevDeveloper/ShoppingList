@@ -1,20 +1,28 @@
 package com.grebnev.shoppinglist.presentation
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.grebnev.shoppinglist.R
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedListener {
     private lateinit var viewModel: MainViewModel
     private lateinit var adapter: ShopListAdapter
+
+    private var shopItemContainer: FragmentContainerView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        shopItemContainer = findViewById(R.id.container_shop_item)
+
         setupRecyclerView()
 
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
@@ -25,8 +33,27 @@ class MainActivity : AppCompatActivity() {
 
         val btnAddShopItem = findViewById<FloatingActionButton>(R.id.btn_add_shop_item)
         btnAddShopItem.setOnClickListener {
-            val intent = ShopItemActivity.newIntentAddShopItem(this)
-            startActivity(intent)
+            if (isLandMode()) {
+                val intent = ShopItemActivity.newIntentAddShopItem(this)
+                startActivity(intent)
+            } else {
+                val fragment = ShopItemFragment.newInstanceAddItem()
+                launchFragment(fragment)
+            }
+        }
+    }
+
+    private fun isLandMode(): Boolean {
+        return shopItemContainer == null
+    }
+
+    private fun launchFragment(fragment: Fragment) {
+        shopItemContainer?.id?.let {
+            supportFragmentManager.popBackStack()
+            supportFragmentManager.beginTransaction()
+                .replace(it, fragment)
+                .addToBackStack(null)
+                .commit()
         }
     }
 
@@ -74,8 +101,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupClickListener() {
         adapter.onShopItemClickListener = {
-            val intent = ShopItemActivity.newIntentEditShopItem(this, it.id)
-            startActivity(intent)
+            if (isLandMode()) {
+                val intent = ShopItemActivity.newIntentEditShopItem(this, it.id)
+                startActivity(intent)
+            } else {
+                val fragment = ShopItemFragment.newInstanceEditItem(it.id)
+                launchFragment(fragment)
+            }
         }
     }
 
@@ -83,5 +115,10 @@ class MainActivity : AppCompatActivity() {
         adapter.onShopItemLongClickListener = {
             viewModel.changeEnabledState(it)
         }
+    }
+
+    override fun onEditingFinished() {
+        Toast.makeText(this, getString(R.string.toast_success), Toast.LENGTH_SHORT).show()
+        supportFragmentManager.popBackStack()
     }
 }
